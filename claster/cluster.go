@@ -405,8 +405,8 @@ func SwapTrueMachine(clusters []Cluster) {
 }
 
 func ThrowManyMachine(clusters []Cluster) {
-	if len(clusters) < 4 {
-		fmt.Println("It unreal ti do it now!")
+	if len(clusters) < 2 {
+		//fmt.Println("It unreal ti do it now!")
 		return
 	}
 	counter := 0
@@ -443,8 +443,8 @@ func ThrowManyMachine(clusters []Cluster) {
 }
 
 func ThrowManyDetails(clusters []Cluster) {
-	if len(clusters) < 4 {
-		fmt.Println("It unreal ti do it now!")
+	if len(clusters) < 2 {
+		//fmt.Println("It unreal ti do it now!")
 		return
 	}
 	counter := 0
