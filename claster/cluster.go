@@ -551,21 +551,6 @@ func FindBestPlaceForAllDetails(clusters []Cluster) {
 	}
 }
 
-func JoinClusters(clusters []Cluster) []Cluster {
-	if len(clusters) <= 1 {
-		return clusters
-	}
-	for i, machine := range clusters[0].MachineArr {
-		if machine {
-			clusters[1].MachineArr[i] = true
-		}
-	}
-	for _, detail := range clusters[0].DetailArr {
-		clusters[1].DetailArr = append(clusters[1].DetailArr, detail)
-	}
-	return clusters[1:]
-}
-
 func TransferOneDetail(clusters []Cluster) {
 	if len(clusters) < 2 {
 		return
@@ -698,4 +683,52 @@ func SwapMachine(clusters []Cluster) {
 
 	clusters[clusterIndex1].MachineArr[machineIndex2], clusters[clusterIndex2].MachineArr[machineIndex2] =
 		clusters[clusterIndex2].MachineArr[machineIndex2], clusters[clusterIndex1].MachineArr[machineIndex2]
+}
+
+func JoinClusters(clusters []Cluster) []Cluster {
+	if len(clusters) <= 1 {
+		return clusters
+	}
+	for i, machine := range clusters[0].MachineArr {
+		if machine {
+			clusters[1].MachineArr[i] = true
+		}
+	}
+	for _, detail := range clusters[0].DetailArr {
+		clusters[1].DetailArr = append(clusters[1].DetailArr, detail)
+	}
+	return clusters[1:]
+}
+
+func SplitClusters(clusters []Cluster, maxCountCluster int) []Cluster {
+	if len(clusters) >= maxCountCluster {
+		return clusters
+	}
+	machinePos := -1
+	isFoundDetail := false
+	newDetails := []detailsPack.Detals{}
+	for i := 0; i < len(clusters); i++ {
+		if machinePos == -1 && findCountMachineInCluster(clusters[i].MachineArr) >= 2 {
+			for j, machine := range clusters[i].MachineArr {
+				if machine {
+					machinePos = j
+					clusters[i].MachineArr[j] = false
+					break
+				}
+			}
+		}
+		if isFoundDetail == false && len(clusters[i].DetailArr) >= 2 {
+			newDetails = append(newDetails, clusters[i].DetailArr[len(clusters[i].DetailArr)-1])
+			clusters[i].DetailArr = clusters[i].DetailArr[:len(clusters[i].DetailArr)-1]
+			isFoundDetail = true
+		}
+		if isFoundDetail == true && machinePos >= 0 {
+			break
+		}
+	}
+	newMachineArr := make([]bool, len(clusters[0].MachineArr))
+	newMachineArr[machinePos] = true
+	newCluster := Cluster{DetailArr: newDetails, MachineArr: newMachineArr}
+	clusters = append(clusters, newCluster)
+	return clusters
 }
