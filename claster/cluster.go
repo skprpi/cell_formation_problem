@@ -11,23 +11,6 @@ type Cluster struct {
 	MachineArr []bool
 }
 
-//func ValidateCluster(clusters []Cluster) []Cluster{
-//	for {
-//		count := 0
-//		for _, el := range clusters {
-//			if len(el.DetailArr) <= 0 {
-//				clusters = JoinClusters(clusters, false)
-//				count += 1
-//				fmt.Println("Validated !!!!")
-//				break
-//			}
-//		}
-//		if count <= 0{
-//			return clusters
-//		}
-//	}
-//}
-
 func CreateClusters(detailArr []detailsPack.Detals) []Cluster {
 	min := len(detailArr[0].Vector)
 	if len(detailArr) < min {
@@ -55,31 +38,31 @@ func CreateClusters(detailArr []detailsPack.Detals) []Cluster {
 
 func FindCosts(cluster []Cluster) float64 {
 	// перебираем каждый кластер
-	n1_in := 0
-	n0_in := 0
-	n1_all := 0
+	n1In := 0
+	n0In := 0
+	n1All := 0
 	for _, el := range cluster {
 		// перебираем каждую деталь из этого кластера
 		for _, el1 := range el.DetailArr {
 			// перебор машин и вектора
 			for k, el2 := range el1.Vector {
 				if el2 == true {
-					n1_all += 1 * len(el1.Names)
+					n1All += 1 * len(el1.Names)
 				}
 				if el2 == el.MachineArr[k] {
 					if el2 {
-						n1_in += 1 * len(el1.Names)
+						n1In += 1 * len(el1.Names)
 					}
 					continue
 				}
 				if el2 == false {
-					n0_in += 1 * len(el1.Names)
+					n0In += 1 * len(el1.Names)
 				}
 
 			}
 		}
 	}
-	return float64(n1_in) / float64(n0_in+n1_all)
+	return float64(n1In) / float64(n0In+n1All)
 }
 
 func CopyCluster(cluster []Cluster) []Cluster {
@@ -93,131 +76,6 @@ func CopyCluster(cluster []Cluster) []Cluster {
 	return newCluster
 }
 
-func checkProfitOfSwapDetail(detail1, detail2 detailsPack.Detals, machine1, machine2 []bool) bool {
-	current1 := findCountIntersection(detail1.Vector, machine1) * len(detail1.Names)
-	current2 := findCountIntersection(detail2.Vector, machine2) * len(detail2.Names)
-	next1 := findCountIntersection(detail1.Vector, machine2) * len(detail1.Names)
-	next2 := findCountIntersection(detail2.Vector, machine1) * len(detail2.Names)
-	if current1+current2 < next1+next2 {
-		return true
-	}
-	return false
-}
-
-func SwapDetail(cluster []Cluster, safeMode bool) {
-	indexCluster1 := rand.Intn(len(cluster))
-	indexCluster2 := rand.Intn(len(cluster))
-	counter := 0
-	for {
-		if indexCluster1 != indexCluster2 {
-			break
-		}
-		indexCluster1 = rand.Intn(len(cluster))
-		indexCluster2 = rand.Intn(len(cluster))
-		counter += 1
-		if counter >= 200 {
-			fmt.Println("It seems only one cluster", len(cluster))
-			return
-		}
-
-	}
-	if len(cluster[indexCluster1].DetailArr) < 1 || len(cluster[indexCluster2].DetailArr) < 1 {
-		fmt.Println(cluster)
-		fmt.Println("Error!")
-		return
-	}
-	indexDetalInCluster1 := rand.Intn(len(cluster[indexCluster1].DetailArr))
-	indexDetalInCluster2 := rand.Intn(len(cluster[indexCluster2].DetailArr))
-
-	//fmt.Println(cluster[indexCluster1].DetailArr[indexDetalInCluster1])
-	if safeMode {
-		count := 0
-		for {
-			detail1 := cluster[indexCluster1].DetailArr[indexDetalInCluster1]
-			detail2 := cluster[indexCluster2].DetailArr[indexDetalInCluster2]
-			machine1 := cluster[indexCluster1].MachineArr
-			machine2 := cluster[indexCluster2].MachineArr
-			if checkProfitOfSwapDetail(detail1, detail2, machine1, machine2) {
-				break
-			}
-			if count >= 100 {
-				return
-			}
-			indexDetalInCluster1 = rand.Intn(len(cluster[indexCluster1].DetailArr))
-			indexDetalInCluster2 = rand.Intn(len(cluster[indexCluster2].DetailArr))
-			count += 1
-		}
-	}
-	cluster[indexCluster1].DetailArr[indexDetalInCluster1], cluster[indexCluster2].DetailArr[indexDetalInCluster2] =
-		cluster[indexCluster2].DetailArr[indexDetalInCluster2], cluster[indexCluster1].DetailArr[indexDetalInCluster1]
-}
-
-func findCountIntersection(vector, machineVector []bool) int {
-	countIntersections := 0
-	for i, v := range vector {
-		if v == machineVector[i] {
-			countIntersections += 1
-		}
-	}
-	return countIntersections
-}
-
-func checkTransfer(detail detailsPack.Detals, currentClusterMachine, nextClusterMachine []bool) bool {
-	currentCountIntersections := findCountIntersection(detail.Vector, currentClusterMachine) * len(detail.Names)
-	nextCountIntersections := findCountIntersection(detail.Vector, nextClusterMachine) * len(detail.Names)
-	if nextCountIntersections >= currentCountIntersections {
-		return true
-	}
-	return false
-}
-
-func SafeTransferDetail(cluster []Cluster, safeMode bool) {
-	counter := 0
-	indexCluster1, indexCluster2 := 0, 0
-	for {
-		if indexCluster1 != indexCluster2 && len(cluster[indexCluster1].DetailArr) > 1 {
-			break
-		}
-		indexCluster1 = rand.Intn(len(cluster))
-		indexCluster2 = rand.Intn(len(cluster))
-		counter += 1
-		if counter >= 200 {
-			//fmt.Println("It seems only one cluster", len(cluster))
-			return
-		}
-	}
-
-	indexDetailInCluster1 := rand.Intn(len(cluster[indexCluster1].DetailArr))
-	detail := cluster[indexCluster1].DetailArr[indexDetailInCluster1]
-	if safeMode {
-		count := 0
-		for {
-			if checkTransfer(detail, cluster[indexCluster1].MachineArr, cluster[indexCluster2].MachineArr) {
-				break
-			}
-			indexDetailInCluster1 = rand.Intn(len(cluster[indexCluster1].DetailArr))
-			if count >= 50 {
-				return
-			}
-			count += 1
-		}
-	}
-	cluster[indexCluster2].DetailArr = append(cluster[indexCluster2].DetailArr, cluster[indexCluster1].DetailArr[indexDetailInCluster1])
-	cluster[indexCluster1].DetailArr = append(cluster[indexCluster1].DetailArr[:indexDetailInCluster1], cluster[indexCluster1].DetailArr[indexDetailInCluster1+1:]...)
-	//fmt.Println(detail)
-
-}
-
-func findProfitOfMachine(machinePos int, detailArr []detailsPack.Detals) int {
-	count := 0
-	for _, detail := range detailArr {
-		if detail.Vector[machinePos] == true {
-			count += 1 * len(detail.Names)
-		}
-	}
-	return count
-}
-
 func findCountMachineInCluster(machineArr []bool) int {
 	count := 0
 	for _, machine := range machineArr {
@@ -228,82 +86,7 @@ func findCountMachineInCluster(machineArr []bool) int {
 	return count
 }
 
-func FindBestPlaceForMachine(clusters []Cluster) {
-	// было 100 / 20 -особо разницы не видно (при 100 есть задержки)
-	for t := 0; t < 30; t++ {
-		isBreak := false
-		for k := 0; k < len(clusters); k++ {
-			// чередую кластеры - k номер текущего кластера для перебора
-			//ShowAnswer(clusters)
-			if findCountMachineInCluster(clusters[k].MachineArr) < 2 {
-				continue
-			}
-			for pos, machine := range clusters[k].MachineArr {
-				// находим лучшую позицию для машины machine
-
-				maxProfit := -1
-				maxProfitIndexCluster := -1
-				if machine {
-					for i, cluster := range clusters {
-						// профит - нахожу для 1 машины в каждом кластере
-						//if i == k {
-						//	continue
-						//}
-						profit := findProfitOfMachine(pos, cluster.DetailArr)
-						if profit > maxProfit {
-							maxProfit = profit
-							maxProfitIndexCluster = i
-						}
-						randNum := rand.Intn(100)
-						if randNum < 50 && profit == maxProfit {
-							maxProfit = profit
-							maxProfitIndexCluster = i
-						}
-					}
-				}
-				if maxProfit >= 0 && maxProfitIndexCluster >= 0 && maxProfitIndexCluster != k {
-					clusters[maxProfitIndexCluster].MachineArr[pos], clusters[k].MachineArr[pos] =
-						clusters[k].MachineArr[pos], clusters[maxProfitIndexCluster].MachineArr[pos]
-					isBreak = true
-					break
-				}
-			}
-			if isBreak {
-				break
-			}
-		}
-	}
-}
-
-func FindBestPlaceForDetail(clusters []Cluster) {
-	for i := 0; i < 30; i++ {
-		for j := 0; j < len(clusters); j++ {
-			if len(clusters[j].DetailArr) >= 2 {
-				FindBestPlaceForAllDetailCorrect(clusters, j)
-			}
-		}
-	}
-}
-
-func ShowAnswer(clusters []Cluster) {
-	fmt.Println("detail / machine")
-	for _, cluster := range clusters {
-		for _, detail := range cluster.DetailArr {
-			for _, name := range detail.Names {
-				fmt.Print(name, " ")
-			}
-		}
-		fmt.Print("  -  ")
-		for i, machine := range cluster.MachineArr {
-			if machine {
-				fmt.Print(i+1, " ")
-			}
-		}
-		fmt.Println()
-	}
-}
-
-func WriteAnswerInFile(clusters []Cluster, maxDetail, maxCluster int) {
+func ShowAns(clusters []Cluster, maxDetail, maxCluster int) {
 	detailAns := make([]int, maxDetail+1)
 	machineAns := make([]int, maxCluster+1)
 	num := 1
@@ -320,110 +103,16 @@ func WriteAnswerInFile(clusters []Cluster, maxDetail, maxCluster int) {
 		}
 		num += 1
 	}
-	fmt.Println(detailAns)
-	fmt.Println(machineAns)
+	for _, el := range machineAns[1:]{
+		fmt.Print(el," ")
+	}
+	fmt.Println()
+	for _, el := range detailAns[1:]{
+		fmt.Print(el," ")
+	}
+	fmt.Println()
 }
 
-func HugeShaking(clusters []Cluster) []Cluster {
-	newCluster := CopyCluster(clusters)
-	indexCluster1 := rand.Intn(len(newCluster))
-	indexCluster2 := rand.Intn(len(newCluster))
-	count := 0
-	for {
-		if indexCluster1 != indexCluster2 {
-			break
-		}
-		indexCluster1 = rand.Intn(len(newCluster))
-		indexCluster2 = rand.Intn(len(newCluster))
-		if count >= 200 {
-			break
-		}
-		count += 1
-	}
-	rNum := rand.Intn(100)
-	if rNum < 50 {
-		newCluster[indexCluster1].DetailArr, newCluster[indexCluster2].DetailArr =
-			newCluster[indexCluster2].DetailArr, newCluster[indexCluster1].DetailArr
-	} else {
-		newCluster[indexCluster1].MachineArr, newCluster[indexCluster2].MachineArr =
-			newCluster[indexCluster2].MachineArr, newCluster[indexCluster1].MachineArr
-	}
-	for i := 0; i < 500; i++ {
-		SwapTrueMachine(newCluster)
-		SafeTransferDetail(newCluster, false)
-		SwapDetail(newCluster, false)
-	}
-	return newCluster
-}
-
-func FindBestPlaceForAllDetailCorrect(clusters []Cluster, clusterIndex int) {
-	// 2 варианта есть - перетаскавать в любом случае или же оставлять если это лучшее место
-	if len(clusters[clusterIndex].DetailArr) < 2 {
-		fmt.Println("Errorsssss!")
-		fmt.Println(clusters)
-		return
-	}
-	count := 0
-	size := len(clusters[clusterIndex].DetailArr)
-	for {
-		if len(clusters[clusterIndex].DetailArr) <= 1 || count >= size*3 {
-			break
-		}
-		detailIndex := rand.Intn(len(clusters[clusterIndex].DetailArr))
-		detail := clusters[clusterIndex].DetailArr[detailIndex]
-		maxCount := -1
-		nextClusterIndex := -1
-		for i, cluster := range clusters {
-			for j, currentDetail := range cluster.DetailArr {
-				if j == detailIndex {
-					continue
-				}
-				countInter := findCountIntersection(detail.Vector, currentDetail.Vector)
-				if countInter > maxCount {
-					maxCount = countInter
-					nextClusterIndex = i
-				}
-			}
-
-		}
-		//if len(clusters[0].DetailArr[0].Vector) - maxCount >  countDiff{
-		//	return
-		//}
-		if nextClusterIndex != clusterIndex && nextClusterIndex != -1 {
-			clusters[nextClusterIndex].DetailArr = append(clusters[nextClusterIndex].DetailArr, clusters[clusterIndex].DetailArr[detailIndex])
-			clusters[clusterIndex].DetailArr = append(clusters[clusterIndex].DetailArr[:detailIndex], clusters[clusterIndex].DetailArr[detailIndex+1:]...)
-		}
-		count += 1
-	}
-}
-
-func SwapTrueMachine(clusters []Cluster) {
-	counter := 0
-	machineIndex1, machineIndex2 := 0, 0
-	indexCluster1, indexCluster2 := 0, 0
-	for {
-		indexCluster1 = rand.Intn(len(clusters))
-		indexCluster2 = rand.Intn(len(clusters))
-
-		machineIndex1 = rand.Intn(len(clusters[indexCluster1].MachineArr))
-		machineIndex2 = rand.Intn(len(clusters[indexCluster2].MachineArr))
-
-		if indexCluster1 != indexCluster2 && clusters[indexCluster1].MachineArr[machineIndex1] &&
-			clusters[indexCluster2].MachineArr[machineIndex2] && machineIndex1 != machineIndex2 {
-			break
-		}
-		if counter >= 400 {
-			return
-		}
-		counter += 1
-	}
-	clusters[indexCluster1].MachineArr[machineIndex1], clusters[indexCluster2].MachineArr[machineIndex1] =
-		clusters[indexCluster2].MachineArr[machineIndex1], clusters[indexCluster1].MachineArr[machineIndex1]
-
-	clusters[indexCluster1].MachineArr[machineIndex2], clusters[indexCluster2].MachineArr[machineIndex2] =
-		clusters[indexCluster2].MachineArr[machineIndex2], clusters[indexCluster1].MachineArr[machineIndex2]
-
-}
 
 func ThrowManyMachine(clusters []Cluster) {
 	if len(clusters) < 2 {
@@ -465,7 +154,6 @@ func ThrowManyMachine(clusters []Cluster) {
 
 func ThrowManyDetails(clusters []Cluster) {
 	if len(clusters) < 2 {
-		//fmt.Println("It unreal ti do it now!")
 		return
 	}
 	counter := 0
@@ -510,66 +198,6 @@ func ThrowManyDetails(clusters []Cluster) {
 		clusters[clusterIndex2].DetailArr = append(clusters[clusterIndex2].DetailArr, el)
 	}
 
-}
-
-func findProfitAndFineIndex(detailVector1 []bool, detailVector2 []bool) float64 {
-	countProfit := 0
-	countFine := 0
-	for i, detailV1 := range detailVector1 {
-		if detailV1 == detailVector2[i] {
-			countProfit += 1
-			continue
-		}
-		countFine += 1
-	}
-	return float64(countProfit) / float64(countFine)
-}
-
-func findBestPlaceForOneDetail(clusters []Cluster, clusterIndex, detailIndex int) bool {
-	// не находим лучшее положение если в кластере только 1 деталь или ошибка с индексами
-	lenOfPrimaryDetailArr := len(clusters[clusterIndex].DetailArr)
-	if len(clusters) <= 1 || lenOfPrimaryDetailArr <= detailIndex || lenOfPrimaryDetailArr < 2 {
-		fmt.Println("It seems too little clusters")
-		return false
-	}
-	maxProfitIndex := -1.0
-	maxProfitClusterPosition := 0
-	for i, cluster := range clusters {
-		for detIndex, detail := range cluster.DetailArr {
-			// не учитываем профит от данной детали
-			if detIndex == detailIndex && clusterIndex == i {
-				continue
-			}
-			// профит / штраф - находим наибольший
-			currentProfit := findProfitAndFineIndex(detail.Vector, clusters[clusterIndex].DetailArr[detailIndex].Vector)
-			if currentProfit > maxProfitIndex {
-				maxProfitIndex = currentProfit
-				maxProfitClusterPosition = i
-			}
-		}
-	}
-	if maxProfitClusterPosition == clusterIndex {
-		return false
-	}
-	// меняем выбранный элемент с последним, чтобы облегчить перестановку
-	clusters[clusterIndex].DetailArr[detailIndex], clusters[clusterIndex].DetailArr[lenOfPrimaryDetailArr-1] =
-		clusters[clusterIndex].DetailArr[lenOfPrimaryDetailArr-1], clusters[clusterIndex].DetailArr[detailIndex]
-	// перестановка
-	clusters[maxProfitClusterPosition].DetailArr = append(clusters[maxProfitClusterPosition].DetailArr, clusters[clusterIndex].DetailArr[lenOfPrimaryDetailArr-1])
-	clusters[clusterIndex].DetailArr = clusters[clusterIndex].DetailArr[:lenOfPrimaryDetailArr-1]
-	return true
-}
-
-func FindBestPlaceForAllDetails(clusters []Cluster) {
-	// не более 20 иначе перебор оптимизаии ( проверено) !!!! уменьшил и стало намного лучше
-	for i := 0; i <= 19; i++ {
-		clusterIndex := rand.Intn(len(clusters))
-		if len(clusters[clusterIndex].DetailArr) < 2 {
-			continue
-		}
-		detailIndex := rand.Intn(len(clusters[clusterIndex].DetailArr))
-		findBestPlaceForOneDetail(clusters, clusterIndex, detailIndex)
-	}
 }
 
 func TransferOneDetail(clusters []Cluster) {
@@ -727,7 +355,7 @@ func SplitClusters(clusters []Cluster, maxCountCluster int) []Cluster {
 	}
 	machinePos := -1
 	isFoundDetail := false
-	newDetails := []detailsPack.Detals{}
+	var newDetails []detailsPack.Detals
 	for i := 0; i < len(clusters); i++ {
 		if machinePos == -1 && findCountMachineInCluster(clusters[i].MachineArr) >= 2 {
 			for j, machine := range clusters[i].MachineArr {
@@ -752,4 +380,80 @@ func SplitClusters(clusters []Cluster, maxCountCluster int) []Cluster {
 	newCluster := Cluster{DetailArr: newDetails, MachineArr: newMachineArr}
 	clusters = append(clusters, newCluster)
 	return clusters
+}
+
+func MakeChange(clusters []Cluster){
+	chance := rand.Intn(1000)
+	if chance <= 250 {
+		TransferOneDetail(clusters)
+	} else if chance <= 500 {
+		TransferOneMachine(clusters)
+	} else if chance <= 750 {
+		SwapMachine(clusters)
+	} else {
+		SwapDetails(clusters)
+	}
+}
+
+func Perturbation(bestCluster []Cluster)[]Cluster{
+	for k := 0; k < 10; k++ {
+		if k % 2 == 0 {
+			ThrowManyMachine(bestCluster)
+		} else {
+			ThrowManyDetails(bestCluster)
+		}
+	}
+	return bestCluster
+}
+
+func Shaking(bestAnsClusterArr [][]Cluster, bestCluster , bestAnsCluster []Cluster, maxSizeClusters int) []Cluster{
+	chance := rand.Intn(1000)
+	if chance < 500 {
+		if chance < 250 || len(bestAnsClusterArr[len(bestCluster)][0].DetailArr) < 1{
+			bestCluster = CopyCluster(bestAnsCluster)
+		} else {
+			bestCluster = CopyCluster(bestAnsClusterArr[len(bestCluster)])
+		}
+	} else {
+		count := rand.Intn(3)
+		for i := 0; i < count; i++ {
+			if chance < 750 {
+				bestCluster = JoinClusters(bestCluster)
+			} else {
+				bestCluster = SplitClusters(bestCluster, maxSizeClusters)
+			}
+		}
+	}
+	return bestCluster
+}
+
+func RememberBestAns(bestAnsClusterArr [][]Cluster, bestCluster, bestAnsCluster []Cluster, detailSize,
+	machineSize int)([][]Cluster, []Cluster){
+	if FindCosts(bestCluster) > FindCosts(bestAnsClusterArr[len(bestCluster)]) + 0.00000000000001 ||
+		len(bestAnsClusterArr[len(bestCluster)][0].DetailArr) < 1{
+		bestAnsClusterArr[len(bestCluster)] = CopyCluster(bestCluster)
+	}
+	if FindCosts(bestCluster) > FindCosts(bestAnsCluster)+0.00000000000001 {
+		fmt.Println(FindCosts(bestCluster), "--------------", len(bestCluster))
+		ShowAns(bestCluster, detailSize, machineSize)
+		bestAnsCluster = CopyCluster(bestCluster)
+	}
+	return bestAnsClusterArr, bestAnsCluster
+}
+
+func MakeBestAnsClusters(maxSizeClusters int, clusters []Cluster) [][]Cluster{
+	bestAnsClusterArr := make([][]Cluster, maxSizeClusters + 1)
+	for i := 1; i <= maxSizeClusters; i++{
+		bestAnsClusterArr[i] = make([]Cluster, i)
+	}
+	bestAnsClusterArr[maxSizeClusters] = CopyCluster(clusters)
+	return bestAnsClusterArr
+}
+
+func CheckBestCluster(clusters, bestCluster []Cluster, k int) ([]Cluster, int){
+	if FindCosts(clusters) > FindCosts(bestCluster)+0.00000000000001 {
+		bestCluster = CopyCluster(clusters)
+		k = 0
+	}
+	return bestCluster, k
 }
