@@ -303,6 +303,27 @@ func ShowAnswer(clusters []Cluster) {
 	}
 }
 
+func WriteAnswerInFile(clusters []Cluster, maxDetail, maxCluster int) {
+	detailAns := make([]int, maxDetail+1)
+	machineAns := make([]int, maxCluster+1)
+	num := 1
+	for _, el := range clusters {
+		for i := 0; i < len(el.DetailArr); i++ {
+			for _, name := range el.DetailArr[i].Names {
+				detailAns[name] = num
+			}
+		}
+		for i, machine := range el.MachineArr {
+			if machine {
+				machineAns[i+1] = num
+			}
+		}
+		num += 1
+	}
+	fmt.Println(detailAns)
+	fmt.Println(machineAns)
+}
+
 func HugeShaking(clusters []Cluster) []Cluster {
 	newCluster := CopyCluster(clusters)
 	indexCluster1 := rand.Intn(len(newCluster))

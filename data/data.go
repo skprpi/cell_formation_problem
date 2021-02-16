@@ -12,18 +12,18 @@ import (
 func formDetailObjectFromText(text string, detailArr []detailsPack.Detals) {
 	str := strings.Split(text, " ")
 	machineNum := -1
-	for i, el := range str{
-		if i == 0{
+	for i, el := range str {
+		if i == 0 {
 			machineNum, _ = strconv.Atoi(str[0])
 			continue
 		}
 		detailNum, _ := strconv.Atoi(el)
 
-		detailArr[detailNum - 1].Vector[machineNum - 1] = true
+		detailArr[detailNum-1].Vector[machineNum-1] = true
 	}
 }
 
-func ReadDataAndFormPrimaryArr() []detailsPack.Detals {
+func ReadDataAndFormPrimaryArr() ([]detailsPack.Detals, int, int) {
 	file, err := os.Open("data\\data.txt")
 	if err != nil {
 		log.Fatal(err)
@@ -36,9 +36,8 @@ func ReadDataAndFormPrimaryArr() []detailsPack.Detals {
 	machineSize, _ := strconv.Atoi(primaryStr[0])
 	detailSize, _ := strconv.Atoi(primaryStr[1])
 
-
 	detailArr := make([]detailsPack.Detals, detailSize)
-	for i := 0; i < detailSize; i++{
+	for i := 0; i < detailSize; i++ {
 		detailArr[i].Vector = make([]bool, machineSize)
 	}
 	for scanner.Scan() {
@@ -52,7 +51,5 @@ func ReadDataAndFormPrimaryArr() []detailsPack.Detals {
 	if scanner.Err() != nil {
 		log.Fatal(scanner.Err())
 	}
-	return detailArr
+	return detailArr, detailSize, machineSize
 }
-
-
